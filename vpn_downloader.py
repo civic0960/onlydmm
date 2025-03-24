@@ -6,7 +6,7 @@ import os
 import re
 import random
 
-# 定義要插入的配置內容
+# Only dmm
 additional_config = '''
 data-ciphers AES-256-GCM:AES-128-GCM:AES-128-CBC
 route-nopull
@@ -23,7 +23,7 @@ route 35.76.0.0 255.255.0.0
 route 54.249.0.0 255.255.0.0
 '''
 
-# 定義 ISRG Root X1 證書
+# ISGR_Root_X1 ca
 ISRG_Root_X1 = '''<ca>
 -----BEGIN CERTIFICATE-----
 MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
@@ -58,37 +58,35 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 -----END CERTIFICATE-----
 </ca>'''
 
-# 獲取 VPNGate 的 API 數據
+
 def fetch_vpn_data():
     url = 'http://www.vpngate.net/api/iphone/'
     response = requests.get(url)
-    data = '\n'.join(response.text.splitlines()[1:])  # 移除第一行標題
+    data = '\n'.join(response.text.splitlines()[1:])
     df = pd.read_csv(StringIO(data))
     return df
 
-# 過濾並找到最快的 N 個 VPN 伺服器
+
 def filter_top_vpns(df, top_n=5):
     # 過濾日本的伺服器，排除 IP 以 219 開頭的伺服器，按速度排序
     filtered_df = df[(df['CountryShort'] == 'JP') & (~df['IP'].str.startswith('219', na=False))]
     top_vpns = filtered_df.sort_values('Speed', ascending=False).head(top_n)  # 取速度最快的前 N 個
     return top_vpns
 
-# 處理 VPN 配置文件
+
 def process_vpn_config(config):
-    # 將 bytes 轉為字符串
+
     config = config.decode('utf-8')
     
     # 替換 CA 證書
     config = re.sub(r'(<ca>)(.+?)(</ca>)', ISRG_Root_X1, config, flags=re.DOTALL)
     
-    # 找到 "#auth-user-pass" 行並在其下方插入 additional_config
+    # Only dmm
     #if "#auth-user-pass" in config:
         #config = config.replace("#auth-user-pass", f"#auth-user-pass\n{additional_config}")
     
-    # 將字符串轉回 bytes
     return config.encode('utf-8')
 
-# 保存 VPN 配置文件
 def save_vpn_config(ip, config, output_dir='OVPN'):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -97,9 +95,9 @@ def save_vpn_config(ip, config, output_dir='OVPN'):
         f.write(config)
     print(f"Saved VPN config for IP {ip} to {file_path}")
 
-# 主函數
+
 def main():
-    # 獲取並處理 VPN 數據
+
     df = fetch_vpn_data()
     top_vpns = filter_top_vpns(df, top_n=5)  # 取速度最快的前 5 個
 
@@ -112,6 +110,7 @@ def main():
     config = base64.b64decode(config_base64)  # 解碼 Base64
     config = process_vpn_config(config)  # 插入 additional_config 並替換 CA 證書
     save_vpn_config(ip, config)  # 保存配置文件
+    os.system("pause")
 
 if __name__ == "__main__":
     main()
