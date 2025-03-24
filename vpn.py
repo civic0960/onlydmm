@@ -66,18 +66,15 @@ def fetch_vpn_data():
     df = pd.read_csv(StringIO(data))
     return df
 
-# 過濾並找到最快的 N 個 VPN 伺服器
 def filter_top_vpns(df, top_n=5):
-    # 過濾日本的伺服器，排除 IP 以 219 開頭的伺服器，按速度排序
+    # Japan server, -219.
     filtered_df = df[(df['CountryShort'] == 'JP') & (~df['IP'].str.startswith('219', na=False))]
-    top_vpns = filtered_df.sort_values('Speed', ascending=False).head(top_n)  # 取速度最快的前 N 個
+    top_vpns = filtered_df.sort_values('Speed', ascending=False).head(top_n)
     return top_vpns
 
 def process_vpn_config(config):
 
     config = config.decode('utf-8')
-    
-    # 替換 CA 證書
     config = re.sub(r'(<ca>)(.+?)(</ca>)', ISRG_Root_X1, config, flags=re.DOTALL)
     
     # Only dmm
@@ -94,21 +91,18 @@ def save_vpn_config(ip, config, output_dir='OVPN'):
         f.write(config)
     print(f"Saved VPN config for IP {ip} to {file_path}")
 
-# 主函數
 def main():
-    # 獲取並處理 VPN 數據
     df = fetch_vpn_data()
-    top_vpns = filter_top_vpns(df, top_n=5)  # 取速度最快的前 5 個
+    top_vpns = filter_top_vpns(df, top_n=5)  # top n fast
 
-    # 隨機選擇一個 VPN 伺服器
+    # random choose
     random_vpn = top_vpns.sample(1).iloc[0]
 
-    # 處理並保存隨機選擇的 VPN 配置文件
     ip = random_vpn['IP']
     config_base64 = random_vpn['OpenVPN_ConfigData_Base64']
-    config = base64.b64decode(config_base64)  # 解碼 Base64
-    config = process_vpn_config(config)  # 插入 additional_config 並替換 CA 證書
-    save_vpn_config(ip, config)  # 保存配置文件
+    config = base64.b64decode(config_base64)
+    config = process_vpn_config(config)
+    save_vpn_config(ip, config)
     os.system("pause")
 
 if __name__ == "__main__":
