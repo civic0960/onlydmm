@@ -1,0 +1,13 @@
+data-ciphers AES-256-GCM:AES-128-GCM:AES-128-CBC
+route-nopull
+# accounts.dmm.com games.dmm.com
+route 13.35.0.0 255.255.0.0
+# dmm.co.jp
+route 13.248.0.0 255.255.0.0
+# games.dmm.co.jp
+route 18.65.0.0 255.255.0.0
+# osapi.dmm.com
+route 202.6.0.0 255.255.0.0
+# apidgp-gameplayer.games.dmm.com
+route 35.76.0.0 255.255.0.0
+route 54.249.0.0 255.255.0.0
